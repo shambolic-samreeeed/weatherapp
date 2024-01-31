@@ -8,7 +8,7 @@ const searchBox = document.querySelector(".searches input");
 const searchBtn = document.querySelector(".searches button");
 const weatherIcon = document.querySelector(".weatherimg");
 const cityName = "Dibrugarh";
-const weekContainer=document.querySelector(".week-container");
+const weekContainer=document.getElementById("week-container");
 
 /* The async and await keywords help return and wait for a promise. the async keywords returns promise whereas the await keyword  waits until the promis is returned*/
 async function checkWeather(city) {
@@ -141,34 +141,35 @@ var cityNameFromUI = 'Dibrugarh'
 getDataFromDb()
 
 function getDataFromDb() {
-    var url = 'http://localhost/weather_app/get_from_database.php?q=getCityWeatherDataFromDb&city=' + cityNameFromUI;
+    var url = 'http://localhost/weatherapp-main/get_from_database.php?q=getCityWeatherDataFromDb&city=' + cityNameFromUI;
     fetch(url).then(function (response) {
         return response.json();
     }).then(function (jsonResponse) {
         if (jsonResponse[0].result === 'no data') {
-            document.getElementById("test").innerHTML = "NO Data.. Fetching from API";
+            document.getElementById("week-container").innerHTML = "NO Data.. Fetching from API";
             fetchDataFromAPIandStoreToDb(cityNameFromUI);
         } else {
             var weekBoxHTML = "";
             jsonResponse[0].data.forEach(weather => {
                 weekBoxHTML += `<div class="week-box">
-        <div class="date">${weather.Day_and_Date}</div>
-        <div class="db-info">
-        <p>${weather.Day_of_Week}</p>
-        <figure><img src="./icons/ ${weather.Weather_Icon}.svg" /></figure>
+        <div class="db-info"> 
+        <p>${weather.Day_and_Date}</p>
+        <p>${weather.Weather_Condition}</p>
         <p>${weather.Temperature}°C</p>
-        <p>${weather.Pressure} Pa</p>
-        <p>${weather.Wind_Speed}m/s</p>
         <p>${weather.Humidity}%</p>
+        <p>${weather.Pressure} Pa</p>
+        <p>${weather.Wind_Speed} Km/hr</p>
         </div>
         </div>
-        <hr>`;
+        <hr >`;
+        {/*  
+      <p>${weather.Day_of_Week}</p>*/}
             });
-            document.querySelector(".week-container").innerHTML = weekBoxHTML;
+            document.getElementById("week-container").innerHTML = weekBoxHTML;
         }
 
     }).catch(error => {
-        document.getElementById(".week-container").innerHTML = "NO Data";
+        document.getElementById("week-container").innerHTML = "NO Data";
     });
 
 }
@@ -181,23 +182,22 @@ async function fetchDataFromAPIandStoreToDb(city) {
         var data = await response.json();
 
         var formData = new FormData();
-        formData.append('day_of_week', 'Sat');
-        formData.append('day_and_date', '2024-01-27');
+        formData.append('day_of_week', new Date().getDay());
+        formData.append('day_and_date', new Date().toDateString());
         formData.append('weather_condition', data.weather[0].description);
         formData.append('weather_icon', data.weather[0].icon);
         formData.append('temperature', data.main.temp);
         formData.append('wind_speed', data.wind.speed);
         formData.append('humidity', data.main.humidity);
         formData.append('pressure', data.main.pressure);
-        formData.append('city', city);
 
-        fetch('http://localhost/weather-app/post_to_database.php', { method: 'POST', body: formData }).then((storeResp) => {
+        fetch('http://localhost/weatherapp-main/post_to_database.php', { method: 'POST', body: formData }).then((storeResp) => {
             return storeResp.text();
         }).then((body) => {
             if (body === 'success') {
                 getDataFromDb()
             } else {
-                document.querySelector(".week-container").innerHTML = "Failed to save To Database";
+                document.getElementById("week-container").innerHTML = "Failed to save To Database";
             }
         })
     }
